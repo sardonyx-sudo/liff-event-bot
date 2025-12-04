@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活動報名表</title>
+    <!-- 引入 LINE LIFF SDK -->
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        /* 簡單的 CSS 讓它看起來像個 App */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; background-color: #f5f5f5; }
+        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2 { color: #333; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 12px; background-color: #06c755; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        button:disabled { background-color: #ccc; }
+        #status { text-align: center; margin-top: 10px; font-size: 14px; color: #666; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📋 幫家人報名</h2>
+    <div class="form-group">
+        <label>您的姓名 (自動抓取)</label>
+        <input type="text" id="myName" disabled value="讀取中...">
+    </div>
+
+    <div class="form-group">
+        <label>家人/來賓姓名</label>
+        <input type="text" id="guestName" placeholder="例如：陳小美">
+    </div>
+
+    <div class="form-group">
+        <label>飲食習慣</label>
+        <select id="diet">
+            <option value="葷食">葷食</option>
+            <option value="素食">素食</option>
+        </select>
+    </div>
+
+    <button id="btnSubmit" onclick="submitForm()">幫他報名 +1</button>
+    <div id="status"></div>
+</div>
+
+<script>
+    // 初始化 LIFF
+    async function main() {
+        // !!! 請將這裡換成您的 LIFF ID !!!
+        await liff.init({ liffId: "YOUR_LIFF_ID_HERE" });
+
+        if (!liff.isLoggedIn()) {
+            liff.login();
+            return;
+        }
+
+        // 取得使用者公開資料 (為了顯示名字讓使用者知道登入成功)
+        const profile = await liff.getProfile();
+        document.getElementById('myName').value = profile.displayName;
+    }
+
+    // 按下報名按鈕執行的動作
+    async function submitForm() {
+        const guestName = document.getElementById('guestName').value;
+        const diet = document.getElementById('diet').value;
+
+        if (!guestName) {
+            alert("請輸入家人姓名！");
+            return;
+        }
+
+        // 檢查是否在 LINE App 內開啟 (liff.sendMessages 只能在 LINE 內運作)
+        if (!liff.isInClient()) {
+            alert("這個功能只能在 LINE App 裡面使用喔！");
+            return;
+        }
+
+        try {
+            // --- 核心魔法：liff.sendMessages ---
+            // 這會讓「使用者自己」在聊天室發送這則訊息
+            await liff.sendMessages([
+                {
+                    type: 'text',
+                    text: `幫 ${guestName} 報名 +1 (${diet})`
+                }
+            ]);
+
+            // 顯示成功並關閉視窗
+            document.getElementById('status').innerText = "報名成功！視窗即將關閉...";
+            setTimeout(() => {
+                liff.closeWindow();
+            }, 1000);
+
+        } catch (error) {
+            console.error(error);
+            alert("發送失敗，請確認 LIFF 設定中有開啟 chat_message.write 權限。");
+        }
+    }
+
+    main();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+line-bot-sdk
+firebase-admin
+pydantic
+python-dotenv
+requests
